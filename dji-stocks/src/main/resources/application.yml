@@ -1,0 +1,11 @@
+spring:
+  profiles:
+    active: @spring.profiles.active@
+  application:
+    name: dji-stocks-data
+
+version: 1.3
+
+springdoc:
+  swagger-ui:
+    use-root-path: true

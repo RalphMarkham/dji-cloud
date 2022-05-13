@@ -1,0 +1,4 @@
+spring:
+  cloud:
+    config:
+      uri: http://dji-config-app:8191

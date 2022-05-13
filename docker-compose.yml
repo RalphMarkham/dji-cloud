@@ -1,0 +1,35 @@
+version: '3.3'
+
+services:
+  #service 1: definition of mongo database
+  mongo_db:
+    image: mongo:4.4.12
+    container_name: mongoDB
+    restart: always
+    ports:
+      - "27017:27017"
+
+  #service 2: definition of your spring-boot app
+  configservice:
+    image: dji-config-service
+    container_name: dji-config-app
+    restart: always
+    build:
+      context: .
+      dockerfile: dji-config/src/main/docker/app/Dockerfile
+    ports:
+      - "8191:8191"
+
+  #service 3: definition of your spring-boot app
+  stockdataservice:
+    image: dji-stock-data-service
+    container_name: dji-stock-data-app
+    restart: always
+    build:
+      context: .
+      dockerfile: dji-stocks/src/main/docker/app/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - configservice
+      - mongo_db
