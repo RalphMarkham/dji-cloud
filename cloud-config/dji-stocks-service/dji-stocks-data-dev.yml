@@ -1,0 +1,13 @@
+
+spring:
+  data:
+    mongodb:
+      host: mongoDB
+      port: 27017
+      database: devStockData
+
+  task:
+    pool:
+      core-size: 2
+      max-size: 4
+      queue-capacity: 500
