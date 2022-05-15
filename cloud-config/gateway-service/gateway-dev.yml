@@ -1,0 +1,13 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: dji-stocks-data
+          uri: lb://dji-stocks-data
+          predicates:
+            - Path=/api/stock-data/**
+eureka:
+  client:
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://discovery:8761
