@@ -11,6 +11,7 @@
 	<modules>
 		<module>dji-config</module>
 		<module>dji-stocks</module>
+        <module>dji-react</module>
 	</modules>
 
 
