@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -45,7 +44,6 @@ public class StockDataController {
     private static final String ERROR_MSG = "error caught exception: ";
     private static final Logger LOG = LoggerFactory.getLogger(StockDataController.class);
 
-    @Autowired
     private final StockDataService stockDataService;
 
     public StockDataController(StockDataService stockDataService) {

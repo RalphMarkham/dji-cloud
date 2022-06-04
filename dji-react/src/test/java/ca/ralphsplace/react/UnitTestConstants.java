@@ -1,6 +1,5 @@
 package ca.ralphsplace.react;
 
-import ca.ralphsplace.react.controller.StockDataController;
 import ca.ralphsplace.react.model.ClientStockData;
 import ca.ralphsplace.react.model.StockDataRecord;
 
@@ -8,11 +7,11 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public interface UnitTestConstants {
+public class UnitTestConstants {
 
-    String clientId = "abc";
+    public static final String CLIENT_ID = "abc";
 
-    String csv = "quarter,stock,date,open,high,low,close,volume,percent_change_price,percent_change_volume_over_last_wk,previous_weeks_volume,next_weeks_open,next_weeks_close,percent_change_next_weeks_price,days_to_next_dividend,percent_return_next_dividend\n" +
+    public static final String CSV = "quarter,stock,date,open,high,low,close,volume,percent_change_price,percent_change_volume_over_last_wk,previous_weeks_volume,next_weeks_open,next_weeks_close,percent_change_next_weeks_price,days_to_next_dividend,percent_return_next_dividend\n" +
             "1,AA,1/7/2011,$15.82,$16.72,$15.78,$16.42,239655616,3.79267,,,$16.71,$15.97,-4.42849,26,0.182704\n" +
             "1,AA,1/21/2011,$16.19,$16.38,$15.60,$15.79,138428495,-2.47066,-43.02495926,242963398,$15.87,$16.13,1.63831,12,0.189994\n" +
             "1,AA,1/28/2011,$15.87,$16.63,$15.82,$16.13,151379173,1.63831,9.355500109,138428495,$16.18,$17.14,5.93325,5,0.185989\n" +
@@ -37,12 +36,12 @@ public interface UnitTestConstants {
             "1,AXP,3/18/2011,$43.86,$44.47,$42.19,$44.17,41757526,0.706794,11.01759959,37613429,$44.75,$45.59,1.87709,19,0.407516\n" +
             "1,AXP,3/25/2011,$44.75,$45.61,$44.10,$45.59,30798332,1.87709,-26.24483548,41757526,$45.54,$45.36,-0.395257,12,0.394823";
 
-    StockDataRecord expectedSdr = new StockDataRecord("1","AA","1/14/2011","$16.71","$16.71","$15.64","$15.97","242963398","-4.42849","1.380223028","239655616","$16.19","$15.79","-2.47066","19","0.187852");
-    ClientStockData expectedCsd = expectedSdr.toClientStockData(clientId);
+    public static final StockDataRecord EXPECTED_SDR = new StockDataRecord("1","AA","1/14/2011","$16.71","$16.71","$15.64","$15.97","242963398","-4.42849","1.380223028","239655616","$16.19","$15.79","-2.47066","19","0.187852");
+    public static final ClientStockData EXPECTED_CSD = EXPECTED_SDR.toClientStockData(CLIENT_ID);
 
-    List<ClientStockData> expectedCsdList = StockDataController.csvToClientStockData(clientId, new StringReader(csv));
-    List<StockDataRecord> expectedSdrList = expectedCsdList.stream()
+    public static final List<ClientStockData> EXPECTED_CSD_LIST = ClientStockData.csvToClientStockData(CLIENT_ID, new StringReader(CSV));
+    public static final List<StockDataRecord> EXPECTED_SDR_LIST = EXPECTED_CSD_LIST.stream()
                     .map(ClientStockData::toStockDataRecord).collect(Collectors.toList());
-    String jsonStockData = "{\"quarter\":\"1\",\"stock\":\"AA\",\"date\":\"1/14/2011\",\"open\":\"$16.71\",\"high\":\"$16.71\",\"low\":\"$15.64\",\"close\":\"$15.97\",\"volume\":\"242963398\",\"percentChangePrice\":\"-4.42849\",\"percentChangeVolumeOverLastWk\":\"1.380223028\",\"previousWeeksVolume\":\"239655616\",\"nextWeeksOpen\":\"$16.19\",\"nextWeeksClose\":\"$15.79\",\"percentChangeNextWeeksPrice\":\"-2.47066\",\"daysToNextDividend\":\"19\",\"percentReturnNextDividend\":\"0.187852\"}";
+    public static final String JSON_STOCK_DATA = "{\"quarter\":\"1\",\"stock\":\"AA\",\"date\":\"1/14/2011\",\"open\":\"$16.71\",\"high\":\"$16.71\",\"low\":\"$15.64\",\"close\":\"$15.97\",\"volume\":\"242963398\",\"percentChangePrice\":\"-4.42849\",\"percentChangeVolumeOverLastWk\":\"1.380223028\",\"previousWeeksVolume\":\"239655616\",\"nextWeeksOpen\":\"$16.19\",\"nextWeeksClose\":\"$15.79\",\"percentChangeNextWeeksPrice\":\"-2.47066\",\"daysToNextDividend\":\"19\",\"percentReturnNextDividend\":\"0.187852\"}";
 
 }

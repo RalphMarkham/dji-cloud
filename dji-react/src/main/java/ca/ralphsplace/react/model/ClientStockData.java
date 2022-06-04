@@ -1,13 +1,20 @@
 package ca.ralphsplace.react.model;
 
+import com.opencsv.bean.CsvToBeanBuilder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -36,6 +43,20 @@ public class ClientStockData implements Comparable<ClientStockData>, Comparator<
     private String percentChangeNextWeeksPrice;
     private String daysToNextDividend;
     private String percentReturnNextDividend;
+
+    public static List<ClientStockData> csvToClientStockData(String cid, InputStream is) {
+        return csvToClientStockData(cid, new InputStreamReader(is));
+    }
+
+    public static List<ClientStockData> csvToClientStockData(String cid, Reader reader) {
+
+        return new CsvToBeanBuilder<StockDataRecord>(new BufferedReader(reader))
+                .withType(StockDataRecord.class)
+                .build()
+                .stream()
+                .map(a -> a.toClientStockData(cid))
+                .collect(Collectors.toList());
+    }
 
     public StockDataRecord toStockDataRecord() {
         var trd = new StockDataRecord();

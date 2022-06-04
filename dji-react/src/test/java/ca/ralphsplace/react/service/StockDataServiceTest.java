@@ -18,13 +18,11 @@ import org.reactivestreams.Publisher;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import reactor.test.StepVerifier;
 
-class StockDataServiceTest implements UnitTestConstants {
+class StockDataServiceTest extends UnitTestConstants {
 
     private static final String CONNECTION_STRING = "mongodb://%s:%d";
 
     private MongodExecutable mongodExecutable;
-    private ReactiveMongoTemplate mongoTemplate;
-    private StockDataRepo stockDataRepo;
     private StockDataService stockDataService;
 
     @AfterEach
@@ -46,23 +44,22 @@ class StockDataServiceTest implements UnitTestConstants {
         MongodStarter starter = MongodStarter.getDefaultInstance();
         mongodExecutable = starter.prepare(mongodConfig);
         mongodExecutable.start();
-        mongoTemplate = new ReactiveMongoTemplate(MongoClients.create(String.format(CONNECTION_STRING, ip, port)), "test");
-        stockDataRepo = new StockDataRepo(mongoTemplate);
-        stockDataService = new StockDataService(stockDataRepo);
+        ReactiveMongoTemplate mongoTemplate = new ReactiveMongoTemplate(MongoClients.create(String.format(CONNECTION_STRING, ip, port)), "test");
+        stockDataService = new StockDataService(new StockDataRepo(mongoTemplate));
     }
 
     @Test
     void save() {
-        Publisher<StockDataRecord> setup = stockDataService.save(expectedCsd);
+        Publisher<StockDataRecord> setup = stockDataService.save(EXPECTED_CSD);
         StepVerifier
                 .create(setup)
-                .expectNext(expectedSdr)
+                .expectNext(EXPECTED_SDR)
                 .verifyComplete();
     }
 
     @Test
     void findByStockEmpty() {
-        Publisher<StockDataRecord> setup = stockDataService.findByStock(clientId, "AA");
+        Publisher<StockDataRecord> setup = stockDataService.findByStock(CLIENT_ID, "AA");
         StepVerifier
                 .create(setup)
                 .expectNextCount(0)
@@ -72,19 +69,19 @@ class StockDataServiceTest implements UnitTestConstants {
     @Test
     void findByStockWithData() {
         save();
-        Publisher<StockDataRecord> setup = stockDataService.findByStock(clientId, "AA");
+        Publisher<StockDataRecord> setup = stockDataService.findByStock(CLIENT_ID, "AA");
         StepVerifier
                 .create(setup)
-                .expectNext(expectedSdr)
+                .expectNext(EXPECTED_SDR)
                 .verifyComplete();
     }
 
     @Test
     void bulkSave() {
-        Publisher<StockDataRecord> setup = stockDataService.bulkSave(expectedCsdList);
+        Publisher<StockDataRecord> setup = stockDataService.bulkSave(EXPECTED_CSD_LIST);
         StepVerifier
                 .create(setup)
-                .expectNextSequence(expectedSdrList)
+                .expectNextSequence(EXPECTED_SDR_LIST)
                 .verifyComplete();
     }
 }

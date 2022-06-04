@@ -4,7 +4,7 @@ import ca.ralphsplace.react.ClientId;
 import ca.ralphsplace.react.model.ClientStockData;
 import ca.ralphsplace.react.model.StockDataRecord;
 import ca.ralphsplace.react.service.StockDataService;
-import com.opencsv.bean.CsvToBeanBuilder;
+import ca.ralphsplace.react.util.InputStreamCollector;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,17 +27,6 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.Reader;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/stock-data")
@@ -57,6 +45,7 @@ public class StockDataController {
                     content = { @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             array = @ArraySchema( schema = @Schema(implementation = StockDataRecord.class))) }),
             @ApiResponse(responseCode = "400", description = "Invalid stock supplied", content = @Content),
+            @ApiResponse(responseCode = "404", description = "NOT FOUND", content = @Content),
             @ApiResponse(responseCode = "403", description = "FORBIDDEN")})
     @GetMapping(value = "/{stock}",
             produces = {MediaType.APPLICATION_JSON_VALUE},
@@ -69,6 +58,7 @@ public class StockDataController {
 
         return monoHasElements.flatMap(b -> Boolean.TRUE.equals(b)
                 ? Mono.just(ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(fluxData))
+                    .doOnError(e -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build())
                 : Mono.just(ResponseEntity.notFound().build()));
     }
 
@@ -88,7 +78,8 @@ public class StockDataController {
 
         return Mono.just(ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(stockDataService.save(stockDataRecord.toClientStockData(clientId))));
+                .body(stockDataService.save(stockDataRecord.toClientStockData(clientId))))
+            .doOnError(e -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
     }
 
     @Operation(summary = "CSV file upload, for bulk creation of weekly stock data")
@@ -105,40 +96,12 @@ public class StockDataController {
     public Mono<ResponseEntity<Flux<StockDataRecord>>> bulkUpdate(@RequestHeader(ClientId.HEADER) final String clientId,
                                                                   @RequestPart("file") final Part file) {
 
-        try(var osPipe = new PipedOutputStream(); var isPipe = new PipedInputStream(osPipe)) {
-
-            DataBufferUtils.write(file.content(), osPipe)
-                    .subscribeOn(Schedulers.parallel())
-                    .doOnComplete(() -> {
-                        try {
-                            osPipe.close();
-                        } catch (IOException ignored) {
-                            log.error("ignoring ",ignored);
-                        }
-                    })
-                    .subscribe(DataBufferUtils.releaseConsumer());
-
-            return Mono.just(ResponseEntity.status(HttpStatus.CREATED)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(stockDataService.bulkSave(csvToClientStockData(clientId, isPipe))));
-
-        } catch (IOException e) {
-            // Should never get here, but makes all the automation happy
-            return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
-        }
-    }
-
-    private static List<ClientStockData> csvToClientStockData(String cid, InputStream is) throws IOException {
-        return csvToClientStockData(cid, new InputStreamReader(new ByteArrayInputStream(is.readAllBytes())));
-    }
-
-    public static List<ClientStockData> csvToClientStockData(String cid, Reader reader) {
-
-        return new CsvToBeanBuilder<StockDataRecord>(new BufferedReader(reader))
-                .withType(StockDataRecord.class)
-                .build()
-                .stream()
-                .map(a -> a.toClientStockData(cid))
-                .collect(Collectors.toList());
+        return file.content()
+            .subscribeOn(Schedulers.boundedElastic())
+            .collect(InputStreamCollector::new, (s, db) -> s.collect(db.asInputStream(true)))
+            .map( is -> ResponseEntity.status(HttpStatus.CREATED)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(stockDataService.bulkSave(ClientStockData.csvToClientStockData(clientId, is.getInputStream()))))
+            .doOnError(e -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
     }
 }
