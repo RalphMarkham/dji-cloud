@@ -68,13 +68,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.sonatype.ossindex.maven</groupId>
-                            <artifactId>ossindex-maven-enforcer-rules</artifactId>
-                            <version>3.1.0</version>
-                        </dependency>
-                    </dependencies>
+                    <version>3.0.0-M2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.owasp</groupId>
+                    <artifactId>dependency-check-maven</artifactId>
+                    <version>7.1.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -186,23 +185,38 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.0.0-M2</version>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <configuration>
+                    <suppressionFiles>
+                        <suppressionFile>${project.basedir}/owasp-suppressions.xml</suppressionFile>
+                    </suppressionFiles>
+                    <failBuildOnCVSS>1</failBuildOnCVSS>
+                    <failOnError>true</failOnError>
+                </configuration>
                 <executions>
                     <execution>
-                        <id>vulnerability-checks</id>
-                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <configuration>
+                    <rules>
+                        <bannedDependencies />
+                        <dependencyConvergence />
+                        <requireUpperBoundDeps />
+                    </rules>
+                </configuration>
+                <executions>
+                    <execution>
                         <goals>
                             <goal>enforce</goal>
                         </goals>
-                        <configuration>
-                            <rules>
-                                <banVulnerable implementation="org.sonatype.ossindex.maven.enforcer.BanVulnerableDependencies">
-<!--                                    <level>WARN</level>-->
-                                </banVulnerable>
-                            </rules>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

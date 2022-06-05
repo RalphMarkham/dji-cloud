@@ -1,0 +1,6 @@
+spring:
+  mongodb:
+    embedded:
+      version: 4.0.21
+
+version: 1.3
