@@ -2,6 +2,7 @@ package ca.ralphsplace.react;
 
 import ca.ralphsplace.react.model.ClientStockData;
 import ca.ralphsplace.react.model.StockDataRecord;
+import ca.ralphsplace.react.util.StockDataUtil;
 
 import java.io.StringReader;
 import java.util.List;
@@ -39,7 +40,7 @@ public class UnitTestConstants {
     public static final StockDataRecord EXPECTED_SDR = new StockDataRecord("1","AA","1/14/2011","$16.71","$16.71","$15.64","$15.97","242963398","-4.42849","1.380223028","239655616","$16.19","$15.79","-2.47066","19","0.187852");
     public static final ClientStockData EXPECTED_CSD = EXPECTED_SDR.toClientStockData(CLIENT_ID);
 
-    public static final List<ClientStockData> EXPECTED_CSD_LIST = ClientStockData.csvToClientStockData(CLIENT_ID, new StringReader(CSV));
+    public static final List<ClientStockData> EXPECTED_CSD_LIST = StockDataUtil.csvToClientStockData(CLIENT_ID, new StringReader(CSV));
     public static final List<StockDataRecord> EXPECTED_SDR_LIST = EXPECTED_CSD_LIST.stream()
                     .map(ClientStockData::toStockDataRecord).collect(Collectors.toList());
     public static final String JSON_STOCK_DATA = "{\"quarter\":\"1\",\"stock\":\"AA\",\"date\":\"1/14/2011\",\"open\":\"$16.71\",\"high\":\"$16.71\",\"low\":\"$15.64\",\"close\":\"$15.97\",\"volume\":\"242963398\",\"percentChangePrice\":\"-4.42849\",\"percentChangeVolumeOverLastWk\":\"1.380223028\",\"previousWeeksVolume\":\"239655616\",\"nextWeeksOpen\":\"$16.19\",\"nextWeeksClose\":\"$15.79\",\"percentChangeNextWeeksPrice\":\"-2.47066\",\"daysToNextDividend\":\"19\",\"percentReturnNextDividend\":\"0.187852\"}";
