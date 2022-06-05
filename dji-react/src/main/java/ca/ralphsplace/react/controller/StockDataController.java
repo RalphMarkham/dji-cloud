@@ -1,10 +1,10 @@
 package ca.ralphsplace.react.controller;
 
 import ca.ralphsplace.react.ClientId;
-import ca.ralphsplace.react.model.ClientStockData;
 import ca.ralphsplace.react.model.StockDataRecord;
 import ca.ralphsplace.react.service.StockDataService;
 import ca.ralphsplace.react.util.InputStreamCollector;
+import ca.ralphsplace.react.util.StockDataUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -101,7 +101,7 @@ public class StockDataController {
             .collect(InputStreamCollector::new, (s, db) -> s.collect(db.asInputStream(true)))
             .map( is -> ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(stockDataService.bulkSave(ClientStockData.csvToClientStockData(clientId, is.getInputStream()))))
+                .body(stockDataService.bulkSave(StockDataUtil.csvToClientStockData(clientId, is.getInputStream()))))
             .doOnError(e -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
     }
 }
