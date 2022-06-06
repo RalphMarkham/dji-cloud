@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import lombok.extern.slf4j.Slf4j;
+import java.util.function.Function;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -30,78 +30,125 @@ import reactor.core.scheduler.Schedulers;
 
 @RestController
 @RequestMapping("/api/stock-data")
-@Slf4j
 public class StockDataController {
 
-    private final StockDataService stockDataService;
+  private final StockDataService stockDataService;
 
-    public StockDataController(StockDataService stockDataService) {
-        this.stockDataService = stockDataService;
-    }
+  public StockDataController(StockDataService stockDataService) {
+    this.stockDataService = stockDataService;
+  }
 
-    @Operation(summary = "Get weekly price data for a stock")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Found stock data",
-                    content = { @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            array = @ArraySchema( schema = @Schema(implementation = StockDataRecord.class))) }),
-            @ApiResponse(responseCode = "400", description = "Invalid stock supplied", content = @Content),
-            @ApiResponse(responseCode = "404", description = "NOT FOUND", content = @Content),
-            @ApiResponse(responseCode = "403", description = "FORBIDDEN")})
-    @GetMapping(value = "/{stock}",
-            produces = {MediaType.APPLICATION_JSON_VALUE},
-            headers = {ClientId.HEADER})
-    public Mono<ResponseEntity<Flux<StockDataRecord>>> getTradeDataTicker(@RequestHeader(ClientId.HEADER) final String clientId,
-                                                                          @PathVariable final String stock) {
+  @Operation(summary = "Get weekly price data for a stock")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Found stock data",
+            content = {
+              @Content(
+                  mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  array = @ArraySchema(schema = @Schema(implementation = StockDataRecord.class)))
+            }),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid stock supplied",
+            content = @Content),
+        @ApiResponse(responseCode = "404", description = "NOT FOUND", content = @Content),
+        @ApiResponse(responseCode = "403", description = "FORBIDDEN")
+      })
+  @GetMapping(
+      value = "/{stock}",
+      produces = {MediaType.APPLICATION_JSON_VALUE},
+      headers = {ClientId.HEADER})
+  public Mono<ResponseEntity<Flux<StockDataRecord>>> getTradeDataTicker(
+      @RequestHeader(ClientId.HEADER) final String clientId, @PathVariable final String stock) {
 
-        var fluxData = stockDataService.findByStock(clientId, stock);
-        var monoHasElements = fluxData.hasElements();
+    var fluxData = stockDataService.findByStock(clientId, stock);
+    var monoHasElements = fluxData.hasElements();
 
-        return monoHasElements.flatMap(b -> Boolean.TRUE.equals(b)
-                ? Mono.just(ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(fluxData))
+    return monoHasElements.flatMap(
+        b ->
+            Boolean.TRUE.equals(b)
+                ? Mono.just(
+                        ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(fluxData))
                     .doOnError(e -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build())
                 : Mono.just(ResponseEntity.notFound().build()));
-    }
+  }
 
-    @Operation(summary = "Create weekly price data for a stock")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Stock data created",
-                    content = { @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = StockDataRecord.class)) }),
-            @ApiResponse(responseCode = "400", description = "Invalid stock data supplied", content = @Content),
-            @ApiResponse(responseCode = "403", description = "FORBIDDEN")})
-    @PostMapping(value = "/",
-            consumes = {MediaType.APPLICATION_JSON_VALUE},
-            produces = {MediaType.APPLICATION_JSON_VALUE},
-            headers = {ClientId.HEADER})
-    public Mono<ResponseEntity<Mono<StockDataRecord>>> createTradeData(@RequestHeader(ClientId.HEADER) final String clientId,
-                                                                        @RequestBody final StockDataRecord stockDataRecord) {
+  @Operation(summary = "Create weekly price data for a stock")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "Stock data created",
+            content = {
+              @Content(
+                  mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = StockDataRecord.class))
+            }),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid stock data supplied",
+            content = @Content),
+        @ApiResponse(responseCode = "403", description = "FORBIDDEN")
+      })
+  @PostMapping(
+      value = "/",
+      consumes = {MediaType.APPLICATION_JSON_VALUE},
+      produces = {MediaType.APPLICATION_JSON_VALUE},
+      headers = {ClientId.HEADER})
+  public Mono<ResponseEntity<Mono<StockDataRecord>>> createTradeData(
+      @RequestHeader(ClientId.HEADER) final String clientId,
+      @RequestBody final StockDataRecord stockDataRecord) {
 
-        return Mono.just(ResponseEntity.status(HttpStatus.CREATED)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(stockDataService.save(stockDataRecord.toClientStockData(clientId))))
-            .doOnError(e -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
-    }
+    var response = stockDataService.save(stockDataRecord.toClientStockData(clientId));
+    var responseEntity =
+        ResponseEntity.status(HttpStatus.CREATED)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(response);
 
-    @Operation(summary = "CSV file upload, for bulk creation of weekly stock data")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Stock data created",
-                    content = { @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                            schema = @Schema(implementation = String.class)) }),
-            @ApiResponse(responseCode = "400", description = "Invalid stock data supplied", content = @Content),
-            @ApiResponse(responseCode = "403", description = "FORBIDDEN")})
-    @PostMapping(value = "/bulk-insert",
-            consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
-            produces = {MediaType.APPLICATION_JSON_VALUE},
-            headers = {ClientId.HEADER})
-    public Mono<ResponseEntity<Flux<StockDataRecord>>> bulkUpdate(@RequestHeader(ClientId.HEADER) final String clientId,
-                                                                  @RequestPart("file") final Part file) {
+    return Mono.just(responseEntity)
+        .doOnError(e -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
+  }
 
-        return file.content()
-            .subscribeOn(Schedulers.boundedElastic())
-            .collect(InputStreamCollector::new, (s, db) -> s.collect(db.asInputStream(true)))
-            .map( is -> ResponseEntity.status(HttpStatus.CREATED)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(stockDataService.bulkSave(StockDataUtil.csvToClientStockData(clientId, is.getInputStream()))))
-            .doOnError(e -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
-    }
+  @Operation(summary = "CSV file upload, for bulk creation of weekly stock data")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "Stock data created",
+            content = {
+              @Content(
+                  mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                  schema = @Schema(implementation = String.class))
+            }),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid stock data supplied",
+            content = @Content),
+        @ApiResponse(responseCode = "403", description = "FORBIDDEN")
+      })
+  @PostMapping(
+      value = "/bulk-insert",
+      consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
+      produces = {MediaType.APPLICATION_JSON_VALUE},
+      headers = {ClientId.HEADER})
+  public Mono<ResponseEntity<Flux<StockDataRecord>>> bulkUpdate(
+      @RequestHeader(ClientId.HEADER) final String clientId, @RequestPart("file") final Part file) {
+
+    Function<InputStreamCollector, ResponseEntity<Flux<StockDataRecord>>>
+        isCollectorToResponseEntity =
+            is ->
+                ResponseEntity.status(HttpStatus.CREATED)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(
+                        stockDataService.bulkSave(
+                            StockDataUtil.csvToClientStockData(clientId, is.getInputStream())));
+
+    return file.content()
+        .subscribeOn(Schedulers.boundedElastic())
+        .collect(InputStreamCollector::new, (s, db) -> s.collect(db.asInputStream(true)))
+        .map(isCollectorToResponseEntity)
+        .doOnError(e -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
+  }
 }

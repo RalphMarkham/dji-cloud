@@ -8,7 +8,7 @@ import org.springframework.cloud.config.server.EnableConfigServer;
 @EnableConfigServer
 public class DjiConfigApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(DjiConfigApplication.class, args);
-	}
+  public static void main(String[] args) {
+    SpringApplication.run(DjiConfigApplication.class, args);
+  }
 }

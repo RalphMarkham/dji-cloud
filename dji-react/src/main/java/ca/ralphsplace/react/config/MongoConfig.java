@@ -8,8 +8,8 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 @Configuration
 public class MongoConfig {
 
-    @Bean
-    ReactiveMongoTemplate reactiveMongoTemplate() {
-        return new ReactiveMongoTemplate(MongoClients.create(), "stockData");
-    }
+  @Bean
+  ReactiveMongoTemplate reactiveMongoTemplate() {
+    return new ReactiveMongoTemplate(MongoClients.create(), "stockData");
+  }
 }

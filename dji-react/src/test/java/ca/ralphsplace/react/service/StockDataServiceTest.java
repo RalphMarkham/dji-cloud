@@ -22,73 +22,64 @@ import reactor.test.StepVerifier;
 
 class StockDataServiceTest extends UnitTestConstants {
 
-    private static final String CONNECTION_STRING = "mongodb://%s:%d";
+  private static final String CONNECTION_STRING = "mongodb://%s:%d";
 
-    private MongodExecutable mongodExecutable;
-    private StockDataService stockDataService;
+  private MongodExecutable mongodExecutable;
+  private StockDataService stockDataService;
 
-    @BeforeAll
-    static void beforeClass() {
-        BlockHound.install();
-    }
+  @BeforeAll
+  static void beforeClass() {
+    BlockHound.install();
+  }
 
-    @AfterEach
-    void clean() {
-        mongodExecutable.stop();
-    }
+  @AfterEach
+  void clean() {
+    mongodExecutable.stop();
+  }
 
-    @BeforeEach
-    void setup() throws Exception {
-        String ip = "localhost";
-        int port = 27017;
+  @BeforeEach
+  void setup() throws Exception {
+    String ip = "localhost";
+    int port = 27017;
 
-        ImmutableMongodConfig mongodConfig = MongodConfig
-                .builder()
-                .version(Version.Main.PRODUCTION)
-                .net(new Net(ip, port, Network.localhostIsIPv6()))
-                .build();
+    ImmutableMongodConfig mongodConfig =
+        MongodConfig.builder()
+            .version(Version.Main.PRODUCTION)
+            .net(new Net(ip, port, Network.localhostIsIPv6()))
+            .build();
 
-        MongodStarter starter = MongodStarter.getDefaultInstance();
-        mongodExecutable = starter.prepare(mongodConfig);
-        mongodExecutable.start();
-        ReactiveMongoTemplate mongoTemplate = new ReactiveMongoTemplate(MongoClients.create(String.format(CONNECTION_STRING, ip, port)), "test");
-        stockDataService = new StockDataService(new StockDataRepo(mongoTemplate));
-    }
+    MongodStarter starter = MongodStarter.getDefaultInstance();
+    mongodExecutable = starter.prepare(mongodConfig);
+    mongodExecutable.start();
+    ReactiveMongoTemplate mongoTemplate =
+        new ReactiveMongoTemplate(
+            MongoClients.create(String.format(CONNECTION_STRING, ip, port)), "test");
 
-    @Test
-    void save() {
-        Publisher<StockDataRecord> setup = stockDataService.save(EXPECTED_CSD);
-        StepVerifier
-                .create(setup)
-                .expectNext(EXPECTED_SDR)
-                .verifyComplete();
-    }
+    stockDataService = new StockDataService(new StockDataRepo(mongoTemplate));
+  }
 
-    @Test
-    void findByStockEmpty() {
-        Publisher<StockDataRecord> setup = stockDataService.findByStock(CLIENT_ID, "AA");
-        StepVerifier
-                .create(setup)
-                .expectNextCount(0)
-                .verifyComplete();
-    }
+  @Test
+  void save() {
+    Publisher<StockDataRecord> setup = stockDataService.save(EXPECTED_CSD);
+    StepVerifier.create(setup).expectNext(EXPECTED_SDR).verifyComplete();
+  }
 
-    @Test
-    void findByStockWithData() {
-        save();
-        Publisher<StockDataRecord> setup = stockDataService.findByStock(CLIENT_ID, "AA");
-        StepVerifier
-                .create(setup)
-                .expectNext(EXPECTED_SDR)
-                .verifyComplete();
-    }
+  @Test
+  void findByStockEmpty() {
+    Publisher<StockDataRecord> setup = stockDataService.findByStock(CLIENT_ID, "AA");
+    StepVerifier.create(setup).expectNextCount(0).verifyComplete();
+  }
 
-    @Test
-    void bulkSave() {
-        Publisher<StockDataRecord> setup = stockDataService.bulkSave(EXPECTED_CSD_LIST);
-        StepVerifier
-                .create(setup)
-                .expectNextSequence(EXPECTED_SDR_LIST)
-                .verifyComplete();
-    }
+  @Test
+  void findByStockWithData() {
+    save();
+    Publisher<StockDataRecord> setup = stockDataService.findByStock(CLIENT_ID, "AA");
+    StepVerifier.create(setup).expectNext(EXPECTED_SDR).verifyComplete();
+  }
+
+  @Test
+  void bulkSave() {
+    Publisher<StockDataRecord> setup = stockDataService.bulkSave(EXPECTED_CSD_LIST);
+    StepVerifier.create(setup).expectNextSequence(EXPECTED_SDR_LIST).verifyComplete();
+  }
 }

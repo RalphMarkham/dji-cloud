@@ -10,14 +10,14 @@ import reactor.core.publisher.Mono;
 @Component
 public class ClientIdWebFilter implements WebFilter {
 
-    @Override
-    public Mono<Void> filter(ServerWebExchange serverWebExchange, WebFilterChain webFilterChain) {
-        var clientId = serverWebExchange.getRequest().getHeaders().getFirst(ClientId.HEADER);
-        if (clientId != null && clientId.trim().length() > 0) {
-            return webFilterChain.filter(serverWebExchange);
-        } else {
-            serverWebExchange.getResponse().setRawStatusCode(HttpStatus.FORBIDDEN.value());
-            return Mono.empty();
-        }
+  @Override
+  public Mono<Void> filter(ServerWebExchange serverWebExchange, WebFilterChain webFilterChain) {
+    var clientId = serverWebExchange.getRequest().getHeaders().getFirst(ClientId.HEADER);
+    if (clientId != null && clientId.trim().length() > 0) {
+      return webFilterChain.filter(serverWebExchange);
+    } else {
+      serverWebExchange.getResponse().setRawStatusCode(HttpStatus.FORBIDDEN.value());
+      return Mono.empty();
     }
+  }
 }

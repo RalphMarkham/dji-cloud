@@ -286,13 +286,8 @@
                     </formats>
                     <!-- define a language-specific format -->
                     <java>
-                        <!-- no need to specify files, inferred automatically, but you can if you want -->
-
-                        <!-- apply a specific flavor of google-java-format and reflow long strings -->
                         <googleJavaFormat>
-                            <version>1.15.0</version>
-                            <style>AOSP</style>
-                            <reflowLongStrings>true</reflowLongStrings>
+                            <version>1.8</version>
                         </googleJavaFormat>
                     </java>
                 </configuration>

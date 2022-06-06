@@ -10,9 +10,9 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class DjiConfigApplicationTest {
 
-    @Test
-    void contextLoads(@Autowired TestRestTemplate restTemplate) {
-        String body = restTemplate.getForObject("/dji-stocks-data/dev", String.class);
-        Assertions.assertTrue(body.contains("\"spring.data.mongodb.host\":\"mongoDB\""));
-    }
+  @Test
+  void contextLoads(@Autowired TestRestTemplate restTemplate) {
+    String body = restTemplate.getForObject("/dji-stocks-data/dev", String.class);
+    Assertions.assertTrue(body.contains("\"spring.data.mongodb.host\":\"mongoDB\""));
+  }
 }

@@ -18,34 +18,34 @@ import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 @Import(value = MongoAutoConfiguration.class)
 public class MongoConfig {
 
-    @Value("${spring.data.mongodb.host}")
-    private String host;
-    @Value("${spring.data.mongodb.port}")
-    private String port;
-    @Value("${spring.data.mongodb.database}")
-    private String database;
+  @Value("${spring.data.mongodb.host}")
+  private String host;
 
+  @Value("${spring.data.mongodb.port}")
+  private String port;
 
-    @Bean
-    public MongoTransactionManager transactionManager(MongoDatabaseFactory dbFactory) {
-        TransactionOptions transactionOptions = TransactionOptions.builder()
-                .readConcern(ReadConcern.LOCAL)
-                .writeConcern(WriteConcern.W1)
-                .build();
-        return new MongoTransactionManager(dbFactory, transactionOptions);
-    }
+  @Value("${spring.data.mongodb.database}")
+  private String database;
 
+  @Bean
+  public MongoTransactionManager transactionManager(MongoDatabaseFactory dbFactory) {
+    TransactionOptions transactionOptions =
+        TransactionOptions.builder()
+            .readConcern(ReadConcern.LOCAL)
+            .writeConcern(WriteConcern.W1)
+            .build();
+    return new MongoTransactionManager(dbFactory, transactionOptions);
+  }
 
-    @Bean
-    public MongoTemplate mongoTemplate(MongoDatabaseFactory dbFactory) {
-        return new MongoTemplate(dbFactory);
-    }
+  @Bean
+  public MongoTemplate mongoTemplate(MongoDatabaseFactory dbFactory) {
+    return new MongoTemplate(dbFactory);
+  }
 
-
-    @Bean
-    public MongoDatabaseFactory dbFactory() {
-        final ConnectionString connectionString = new ConnectionString("mongodb://"+host+":"+port+"/"+database);
-        return new SimpleMongoClientDatabaseFactory(connectionString);
-    }
-
+  @Bean
+  public MongoDatabaseFactory dbFactory() {
+    final ConnectionString connectionString =
+        new ConnectionString("mongodb://" + host + ":" + port + "/" + database);
+    return new SimpleMongoClientDatabaseFactory(connectionString);
+  }
 }

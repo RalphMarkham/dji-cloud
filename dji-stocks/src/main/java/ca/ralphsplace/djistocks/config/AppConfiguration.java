@@ -12,19 +12,19 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AppConfiguration {
 
-    @Bean
-    public OpenAPI customOpenAPI(@Value("${version}") String appVersion) {
-        return new OpenAPI()
-                .components(new Components())
-                .info(new Info().title("Dow Jones Index Stock Data API").version(appVersion));
-    }
+  @Bean
+  public OpenAPI customOpenAPI(@Value("${version}") String appVersion) {
+    return new OpenAPI()
+        .components(new Components())
+        .info(new Info().title("Dow Jones Index Stock Data API").version(appVersion));
+  }
 
-    @Bean
-    public FilterRegistrationBean<ClientFilter> tenantFilter() {
-        FilterRegistrationBean<ClientFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new ClientFilter());
-        registrationBean.addUrlPatterns("/api/stock-data/*");
+  @Bean
+  public FilterRegistrationBean<ClientFilter> tenantFilter() {
+    FilterRegistrationBean<ClientFilter> registrationBean = new FilterRegistrationBean<>();
+    registrationBean.setFilter(new ClientFilter());
+    registrationBean.addUrlPatterns("/api/stock-data/*");
 
-        return registrationBean;
-    }
+    return registrationBean;
+  }
 }
